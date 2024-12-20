@@ -1,0 +1,60 @@
+FROM ubuntu:22.04
+
+# Configure environment variables
+ENV LANGUAGE=C.UTF-8 \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies including Python and build tools
+RUN apt-get update && \
+    apt-get install -y \
+    python3 \
+    python3-pip \
+    build-essential \
+    supervisor \
+    curl \
+    wget \
+    gnupg \
+    socat \
+    libssl-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install rippled
+RUN mkdir -p /usr/local/share/keyrings/ && \
+    wget -q -O - "https://repos.ripple.com/repos/api/gpg/key/public" | gpg --dearmor > /usr/local/share/keyrings/ripple-key.gpg && \
+    echo "deb [signed-by=/usr/local/share/keyrings/ripple-key.gpg] https://repos.ripple.com/repos/rippled-deb jammy stable" | tee -a /etc/apt/sources.list.d/ripple.list && \
+    apt-get update && \
+    apt-get install rippled -y && \
+    ln -s /opt/ripple/bin/rippled /usr/bin/rippled && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up Python environment
+WORKDIR /app
+COPY requirements.txt .
+RUN pip3 install --upgrade pip && \
+    pip3 install --no-cache-dir -r requirements.txt
+
+# Copy configs and setup directories
+RUN mkdir -p /etc/opt/ripple /etc/rippled /var/log/rippled /var/lib/rippled/db /var/log/supervisor
+COPY rippled.cfg /etc/opt/ripple/
+COPY validators.txt /etc/rippled/
+COPY app.py .
+COPY supervisord.conf /etc/supervisor/conf.d/
+
+# Create startup script
+# Create startup script
+RUN echo '#!/bin/bash\n\
+exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf' > /app/startup.sh && \
+    chmod +x /app/startup.sh
+    
+# Expose ports
+EXPOSE 8080 5005 51235
+
+# Health check focusing on API availability
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Start services with the startup script
+CMD ["/app/startup.sh"]
