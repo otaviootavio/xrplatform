@@ -3,6 +3,7 @@
 [![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://xrplatform.vercel.app)
 [![Docker Factory](https://img.shields.io/badge/github-docker--factory-blue.svg)](https://github.com/otaviootavio/docker-factory)
 [![SaaS Frontend](https://img.shields.io/badge/github-saas--project-blue.svg)](https://github.com/senderro/saasproject)
+[![Video Demo](https://img.shields.io/badge/video-demo-red.svg)](https://utfs.io/f/TCbmfIvnltRWAX1QnlU9UcTgfeSo4V31WOZyEpnjK5vLzBkR)
 
 A Platform as a Service (PaaS) for deploying and managing XRP Ledger nodes using Google Cloud Run. Streamlines the process of running and maintaining XRPL validator and client nodes through container orchestration with a modern web interface.
 
